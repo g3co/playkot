@@ -35,7 +35,7 @@ class Storage implements IStorage
             }
         }
 
-        return new self(new AdapterRedis($config));
+        return new self(new AdapterMongo($config));
     }
 
     public function __construct(IStorageAdapter $adapter)
@@ -58,11 +58,14 @@ class Storage implements IStorage
 
         $paymentArray = $payment->toArray();
 
+        $isUpdate = false;
+
         if ($this->storage->has($payment->getId())) {
             $paymentArray = array_diff($paymentArray, $this->storage->get($payment->getId()));
+            $isUpdate = true;
         }
 
-        $this->storage->save($payment->getId(), $paymentArray);
+        $this->storage->save($payment->getId(), $paymentArray, $isUpdate);
 
         return $this;
     }
@@ -87,7 +90,13 @@ class Storage implements IStorage
      */
     public function get(string $paymentId): IPayment
     {
-        return Payment::fromArray($this->storage->get($paymentId));
+        $result = $this->storage->get($paymentId);
+
+        if (empty($result)) {
+            throw new Exception\NotFound();
+        }
+
+        return Payment::fromArray($result);
     }
 
     /**

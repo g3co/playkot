@@ -2,10 +2,17 @@
 
 namespace Playkot\PhpTestTask\Storage;
 
+use MongoDB\Driver\Cursor;
+use MongoDB\Driver\Manager as MongoClient;
+use MongoDB\Driver\BulkWrite;
+use MongoDB\Driver\WriteResult;
+use MongoDB\Driver\Query;
 
 class AdapterMongo implements IStorageAdapter
 {
     protected $connection = null;
+    protected $dbName = null;
+    protected $collection = null;
 
     public function __construct(array $config)
     {
@@ -17,33 +24,88 @@ class AdapterMongo implements IStorageAdapter
             $config['port'] = '27017';
         }
 
-        $this->connection = new \MongoClient('mongodb://' . $config['host'] . ':' . $config['port']);
+        $this->connection = new MongoClient('mongodb://' . $config['host'] . ':' . $config['port']);
 
-        if (!empty($config['db'])) {
-            if (!$this->connection->c((int)$config['db'])) {
-                throw new \Exception('The failure connect to a Redis db');
+        $this->dbName = !empty($config['dbName']) ? $config['dbName'] : 'local';
+        $this->collection = !empty($config['collection']) ? $config['collection'] : 'demo';
+    }
+
+    /**
+     * @param string $id
+     * @param array $payment
+     * @param bool $isUpdate
+     * @return bool
+     */
+    public function save(string $id, array $payment, bool $isUpdate): bool
+    {
+        if (!empty($payment)) {
+
+            $bulk = new BulkWrite();
+
+            if ($isUpdate) {
+                $bulk->update(['paymentId' => $id], ['$set' => $payment]);
+            } else {
+                $bulk->insert($payment);
             }
+
+            return (bool)count($this->execWrite($bulk)->getWriteErrors());
         }
 
+        return true;
     }
 
-    public function save(string $id, array $payment): bool
-    {
-
-    }
-
+    /**
+     * @param string $paymentId
+     * @return bool
+     */
     public function has(string $paymentId): bool
     {
-        // TODO: Implement has() method.
+        $cursorArray = $this->exec(new Query(['paymentId' => $paymentId], []))->toArray();
+        return isset($cursorArray[0]);
     }
 
+    /**
+     * @param string $paymentId
+     * @return array
+     */
     public function get(string $paymentId): array
     {
-        // TODO: Implement get() method.
+        $cursor = $this->exec(new Query(['paymentId' => $paymentId], []));
+        $cursorArray = (array)current($cursor->toArray());
+
+        if ($cursorArray == ['']) {
+            $cursorArray = [];
+        }
+
+        return $cursorArray;
     }
 
-    public function remove(IPayment $payment): bool
+    /**
+     * @param string $paymentId
+     * @return bool
+     */
+    public function remove(string $paymentId): bool
     {
-        // TODO: Implement remove() method.
+        $bulk = new BulkWrite;
+        $bulk->delete(['paymentId' => $paymentId], ['limit' => 0]);
+        return (bool)count($this->execWrite($bulk)->getWriteErrors());
+    }
+
+    /**
+     * @param Query $query
+     * @return Cursor
+     */
+    protected function exec(Query $query):Cursor
+    {
+        return $this->connection->executeQuery($this->dbName . '.' . $this->collection, $query);
+    }
+
+    /**
+     * @param BulkWrite $bulk
+     * @return WriteResult
+     */
+    protected function execWrite(BulkWrite $bulk):WriteResult
+    {
+        return $this->connection->executeBulkWrite($this->dbName . '.' . $this->collection, $bulk);
     }
 }

@@ -3,8 +3,6 @@
 namespace Playkot\PhpTestTask\Storage;
 
 
-use Playkot\PhpTestTask\Payment\IPayment;
-use Playkot\PhpTestTask\Payment\IPaymentArray;
 use Playkot\PhpTestTask\Storage\Exception;
 
 
@@ -15,9 +13,10 @@ interface IStorageAdapter
      *
      * @param string $id paymentId
      * @param array $payment fields array
+     * @param bool $isUpdate update status flag
      * @return bool
      */
-    public function save(string $id, array $payment): bool;
+    public function save(string $id, array $payment, bool $isUpdate): bool;
 
     /**
      * Проверка на существование платежа

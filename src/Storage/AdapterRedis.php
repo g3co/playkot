@@ -3,9 +3,6 @@
 namespace Playkot\PhpTestTask\Storage;
 
 
-use Playkot\PhpTestTask\Payment\IPayment;
-use Playkot\PhpTestTask\Payment\IPaymentArray;
-
 class AdapterRedis implements IStorageAdapter
 {
     protected $redis = null;
@@ -37,9 +34,10 @@ class AdapterRedis implements IStorageAdapter
      *
      * @param string $id paymentId
      * @param array $payment fields array
+     * @param bool $isUpdate update status flag
      * @return bool
      */
-    public function save(string $id, array $payment): bool
+    public function save(string $id, array $payment, bool $isUpdate): bool
     {
         foreach ($payment as $key => $value) {
             $this->redis->hSet($id, $key, $value);
@@ -68,10 +66,6 @@ class AdapterRedis implements IStorageAdapter
     public function get(string $paymentId): array
     {
         $result = $this->redis->hGetAll($paymentId);
-
-        if(!$result) {
-            throw new Exception\NotFound();
-        }
 
         return $result;
     }
