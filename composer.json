@@ -1,0 +1,20 @@
+{
+    "name": "playkot/php-test-task",
+    "type": "project",
+    "private": true,
+    "autoload": {
+        "psr-4": {
+            "Playkot\\PhpTestTask\\": "src",
+            "Test\\Playkot\\PhpTestTask\\": "tests"
+        }
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    },
+    "require": {
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">=6.0"
+    }
+}
