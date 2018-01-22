@@ -35,7 +35,7 @@ class Storage implements IStorage
             }
         }
 
-        return new self(new AdapterMongo($config));
+        return new self(new AdapterRedis($config));
     }
 
     public function __construct(IStorageAdapter $adapter)
@@ -48,6 +48,7 @@ class Storage implements IStorage
      * или создание нового
      *
      * @param IPayment $payment
+     * @throws \Exception
      * @return IStorage
      */
     public function save(IPayment $payment): IStorage
@@ -65,7 +66,9 @@ class Storage implements IStorage
             $isUpdate = true;
         }
 
-        $this->storage->save($payment->getId(), $paymentArray, $isUpdate);
+        if ($this->storage->save($payment->getId(), $paymentArray, $isUpdate)) {
+            throw new \Exception('Did not save');
+        }
 
         return $this;
     }
