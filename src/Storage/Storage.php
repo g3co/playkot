@@ -66,7 +66,7 @@ class Storage implements IStorage
             $isUpdate = true;
         }
 
-        if ($this->storage->save($payment->getId(), $paymentArray, $isUpdate)) {
+        if (!$this->storage->save($payment->getId(), $paymentArray, $isUpdate)) {
             throw new \Exception('Did not save');
         }
 
