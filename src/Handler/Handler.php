@@ -19,9 +19,6 @@ class Handler implements IHandler
 {
     protected $storage = null;
 
-    /**
-     * @param IStorage $storage
-     */
     public function __construct(IStorage $storage)
     {
         $this->storage = $storage;
@@ -55,8 +52,8 @@ class Handler implements IHandler
             new \DateTime(),
             false,
             Currency::get($event['currency']),
-            (float)$event['value'],
-            (!empty($event['tax'])) ? (float)$event['tax'] : 0,
+            (float)str_replace(',','.',$event['value']),
+            (!empty($event['tax'])) ? (float)str_replace(',','.',$event['tax']) : 0,
             State::get($event['action']));
 
         $this->storage->save($payment);
