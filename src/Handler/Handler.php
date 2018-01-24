@@ -18,12 +18,13 @@ use Playkot\PhpTestTask\Storage\IStorage;
 class Handler implements IHandler
 {
     protected $storage = null;
-    protected $stateMapping = null;
 
-    public function __construct(IStorage $storage, array $stateMapping = [])
+    /**
+     * @param IStorage $storage
+     */
+    public function __construct(IStorage $storage)
     {
         $this->storage = $storage;
-        $this->stateMapping = $stateMapping;
     }
 
     /**
@@ -33,10 +34,7 @@ class Handler implements IHandler
      */
     public function process(array $event): IPayment
     {
-        if (empty($event['action']) ||
-            !array_key_exists($event['action'], $this->stateMapping) ||
-            !State::exists($this->stateMapping[$event['action']])
-        ) {
+        if (empty($event['action']) || !State::exists($event['action'])) {
             throw new \Exception('Wrong data in "action" parameter');
         }
 
@@ -59,8 +57,9 @@ class Handler implements IHandler
             Currency::get($event['currency']),
             (float)$event['value'],
             (!empty($event['tax'])) ? (float)$event['tax'] : 0,
-            State::get(State::CHARGED));
+            State::get($event['action']));
 
-        return $this->storage->save($payment);
+        $this->storage->save($payment);
+        return $payment;
     }
 }
