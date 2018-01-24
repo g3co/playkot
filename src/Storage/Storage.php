@@ -62,7 +62,6 @@ class Storage implements IStorage
         $isUpdate = false;
 
         if ($stored = $this->storage->get($payment->getId())) {
-            file_put_contents('/home/web/anchorcms/debug.info',print_r(array(__FILE__,__METHOD__,__LINE__,$stored),true),FILE_APPEND);
             $paymentArray = array_diff($paymentArray, $stored);
             $isUpdate = true;
         }
